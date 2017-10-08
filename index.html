@@ -1,0 +1,155 @@
+<html>
+<head>
+	<link rel="stylesheet" 
+		href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" 
+		integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+	<link rel = "stylesheet"
+			href="style.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<script 
+		src="http://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.4.0/wavesurfer.min.js">
+	</script>
+	<script 
+		src="https://unpkg.com/sweetalert/dist/sweetalert.min.js">
+	</script> 	
+	<script
+  		src="https://code.jquery.com/jquery-3.2.1.min.js"
+  		integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  		crossorigin="anonymous">
+  	</script>
+
+</head>
+
+<body>
+	 <div style="margin-left: 50px;margin-top: 30px" class="col-md-12">
+	      <form action="#" method="post" id="target">
+                  
+			<div class="form-group">
+    			<label for="exampleInputFile">File input</label>
+    			<input type="file" class="form-control-file" id="exampleInputFile" aria-describedby="fileHelp" accept="audio/*" />
+    			<small id="fileHelp" class="form-text text-muted">This is some placeholder block-level help text for the above input. It's a bit lighter and easily wraps to a new line.</small>
+  			</div> 
+          
+          </form>
+          <div class="col-md-12">
+	          <div class="col-md-11" id="audioDetails"></div>
+	          <div class="col-md-11" id="waveform"></div></br>
+	      </div>
+
+
+          <div class="col-md-12">
+	          <div class="col-md-11" id="audioDetailsNew"></div>
+	          <div class="col-md-11" id="waveformNew"></div></br>
+	      </div>
+
+	      <div class="col-md-12" id="target1">
+		      	<div class="radio">
+				  <label class="radio-inline"><input type="radio" name="optradio" value="8000">8000 Khz</label>
+				</div>
+				<div class="radio">
+				  <label class="radio-inline"><input type="radio" name="optradio" value="16000">16000 Khz</label>
+				</div>
+				<div class="radio disabled">
+				  <label class="radio-inline"><input type="radio" name="optradio" value="44100">44100 Khz</label>
+				</div>
+
+		      		<button class="btn btn-info" id="submit">Submit</button> 
+		      
+	      </div>
+
+	  </div>
+	
+
+	<script>
+
+   		
+		$(document).ready(function(){
+			$('#target1').hide();
+
+			swal("Well Done !", "You have arrived at AudioSampler.ai", "success", {
+  					button: "Let's Start",});
+
+			$("#exampleInputFile").change(function(){
+	    			var file = this.files[0];  
+	   				var filename = file.name;
+	   				console.log(filename);
+					var obj = { filename:filename };
+				    var result="";
+				    $.ajax({
+				      url:"http://localhost:3000/fileInfo",
+				      async: false, 
+				      processData: false, 
+				      type: "POST",
+  					  contentType: "application/json; charset=utf-8",
+  					  data: JSON.stringify(obj),
+				      success:function(data) {
+				         result = data; 
+				      }
+				   });
+				   var file = this.files[0];  
+		   		   var filename = file.name;
+				   console.log(result.response);
+				   $("#audioDetails").hide();
+				   $("#target").delay(1000).hide(0);
+				   $("#audioDetails").delay(1500).html(result.response).show(0);
+
+				   setTimeout(function(){
+						var wavesurfer = WaveSurfer.create({
+						    container: '#waveform',
+						    waveColor: 'violet',
+						    progressColor: 'purple'
+						});
+						wavesurfer.load(filename);
+						$('#target1').show();
+					}, 1000);
+				   $("#submit").on('click',function(){
+				   		var sampleRate = $('input[name=optradio]:checked').val();
+				   		var resultName="";
+				   		var obj1 = { filename:filename, sampleRate:sampleRate };
+				   		$("#target1").hide();
+				    $.ajax({
+						      url:"http://localhost:3000/fileConverion",
+						      async: false, 
+						      processData: false, 
+						      type: "POST",
+		  					  contentType: "application/json; charset=utf-8",
+		  					  data: JSON.stringify(obj1),
+						      success:function(data) {
+						         resultName = data;
+						          
+						      }
+						   });
+				    		console.log(resultName.resultName);
+
+				    var obj = { filename:resultName.resultName };
+				    var resultNew="";
+				    $.ajax({
+				      url:"http://localhost:3000/fileInfo",
+				      async: false, 
+				      processData: false, 
+				      type: "POST",
+  					  contentType: "application/json; charset=utf-8",
+  					  data: JSON.stringify(obj),
+				      success:function(data) {
+				         resultNew = data; 
+				      }
+
+				   });	
+					   $("#audioDetailsNew").delay(1000).html(resultNew.response).show(0);	
+
+						   setTimeout(function(){
+								var wavesurfer = WaveSurfer.create({
+								    container: '#waveformNew',
+								    waveColor: 'violet',
+								    progressColor: 'purple'
+								});
+								wavesurfer.load(resultName.resultName);
+							}, 1000);
+				   });	
+				   
+   			});
+});
+		
+	</script>
+</body>
+</html>
